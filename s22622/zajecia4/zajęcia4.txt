@@ -1,0 +1,277 @@
+25.04.2021 	Wstęp do C/C++
+
+Zad 1.
+Napisz program obliczający sumę liczb wprowadzonych przez użytkownika (ze standardowego wejścia) i wypisujący wynik na standardowe wyjście. Przydatne hasła to:
+scanf
+printf
+operatory arytmetyczne
+if
+for albo while
+________________________________________________
+						|
+#include <stdio.h>				|
+						|
+int main() {					|
+						|
+        int suma = 0;				|
+        int input = 0;				|
+						|
+        while(scanf("%d\n", &input ) > 0){	|
+                suma += input;			|
+        }					|
+						|
+        printf("%d\n", suma);			|						
+        return 0;				|
+}						|
+________________________________________________|
+
+
+Plik kompiluję kompilatorem gcc.
+
+"gcc -Wall -ansi -pedantic -o zad1 zad1.c"
+nadaję bit wykonywalności
+uruchamiam "./zad1"
+wpisuję kolejne liczby do sumowania rozdzielając je enterem.
+
+Ctrl+ d - jak już wpiszemy wartości do sumowania należy zamknąć strumienń wejścia
+
+Zad 2.
+
+Przerób ten program tak, aby wartość była zwracana jako kod zakończenia programu. Wyświetl tą wartość z linii komend. Przydatne komendy:
+return
+
+________________________________________________
+                                                |
+#include <stdio.h>                              |
+                                                |
+int main() {                                    |
+                                                |
+        int suma = 0;                           |
+        int input = 0;                          |
+                                                |
+        while(scanf("%d\n", &input ) > 0){      |
+                suma += input;                  |
+        }                                       |
+                                                |
+        printf("%d\n", suma);                   |
+                                                |
+        return suma;                            |
+}                                               |
+________________________________________________|
+
+Aby sprawdzic wartość return użyć należy 
+"echo $LASTEXITCODE" -dla PowerShella
+lub
+"echo $?" -dla basha
+
+Zad 3.
+
+Napisz program wyświetlający tradycyjną choinkę o zadanej wysokości. Wysokość niech będzie podana jako parametr wywołania programu. Przydatne hasła to:
+atoi
+argc, argv
+for
+
+________________________________________________________________
+#include <stdio.h>						|
+#include <stdlib.h>						|
+								|
+int main(int argc, char** argv ) {				|
+								|
+        /*int i =0;						|
+								|
+        for(i=0; i<argc; i++){					|
+                printf("%d\n",atoi( argv[i]));			|
+        }*/							|
+								|
+        if(argc==2){						|
+                int i = 0;					|
+                int j=0;					|
+                int iloscWierszy=atoi(argv[1]);			|
+                printf("Wiersze: %d\n", iloscWierszy);		|
+								|
+                for (i=0; i<iloscWierszy; i++) {		|
+								|
+                        for(j=0; j<iloscWierszy-i; j++){	|
+                                printf(" ");			|
+                        }					|
+                        for(j=0; j<i*2-1; j++){			|
+                                printf("*");			|
+                        }					|
+                        printf("\n");				|
+                }						|
+        }							|
+        return 0;						|
+}								|
+________________________________________________________________|		
+argv - wartości argumentów
+argc - ilość argumentów
+atoi - Konwertuje wartość zapisaną w łańcuchu znaków do postaci liczby typu całkowitego (int)
+
+W sumie nie wiem czy to zadanie rozwiązaliśmy poprawnie- wg naszego rozwiązania mamy n-1 wierszy a w zadaniu mieliśmy otrzymać n wierszy z gwiazdkami.
+
+Zad 4.
+
+Napisz program wczytujący z pliku tekstowego ciąg liczb. Format pliku jest taki:
+
+liczba elementów ciągu (jako liczba naturalna)
+Kolejne liczby - każda w nowej linii
+Niech program wypisze je w odwrotnej kolejności. Program powinien przyjmować zero albo jeden argument:
+
+jeśli nie podano argumentu, to ma wczytywać ze standardowego wejścia
+jeśli podano argument, to jest to nazwa pliku do wczytania
+Skorzystaj z fopen, fclose, fscanf.
+
+Zabezpiecz przed przepełnieniem bufora.
+________________________________________________	
+#include <stdlib.h>				|
+#include <stdio.h>				|
+						|
+int main(int argc, char* argv[]) {		| tu mamy te same wartości co w poprzednim zad. 
+						|
+        FILE *f; 				| 
+        int i=0;				| 
+        int loop = 0;				|
+        int *liczby;				|
+						|
+	if(argc <2 ) {				| warunek co do liczby argumentów
+                f = stdin;			|
+        } else {				|
+                f = fopen(argv[1], r);		| otwiera plik do odczytu
+        }					|
+			 			|
+        if (f== NULL){				| jeśli pliku nie da sie odczytac zwraca 1
+                return 1;			|
+        }					|
+						|
+        fscanf(f, "%d\n", &i);			| ustawia "i" na pierwsza wartość z pliku f (liczba)
+						|
+        liczby = malloc(i * sizeof(i));		| prelokowanie miejsca na "i" elementów typu int	
+						|
+        for ( loop = 0; loop< i; loop++)  {	| przypisanie miejsc w tablicy kolejnym wartościom z iteracji  
+                int a ;				|
+						|
+                fscanf(f, "%d\n",&a);		|
+                liczby[loop] = a;		|
+						|
+        }					|
+						|
+        if (f != NULL) {			| po wczytaniu liczb do tablicy zamykamy plik
+                fclose(f);			|
+        }					|
+						|
+        for (loop = i; loop>0; loop--){ 	| wypisanie liczb od ostatniej 
+                int a = liczby[loop-1];		|
+                printf("%d\n", a);		|
+        }					|
+						|
+        if (liczby != NULL) {			| uwolnienie miejsca w pamięci 
+                free(liczby);			|
+        }					|
+						|
+        return 0;				|
+}						|
+________________________________________________|
+
+Zad 5.
+Rozwiń program z poprzedniego zadania o zapis wczytanej tablicy do pliku binarnego. (tym razem niech nazwa tego pliku będzie ustalona wewnątrz programu)
+
+Rozwiń program tak, aby podanie argumentu:
+
+--print
+spowodowało wypisanie zawartości pliku binarnego.
+________________________________________________________________
+#include <stdlib.h>						|
+#include <stdio.h>						|	
+#include <string.h>						|
+#include <stdbool.h>						|
+								|
+int main(int argc, char* argv[]) {				|
+								|
+        FILE *f;						|
+        FILE *f2;						|
+        int i=0, j=0;						|
+        int loop = 0;						|
+        int *liczby;						|
+        bool printFlag = false;					|
+        char filename[255];					|
+        int *liczby2;						|
+								|
+        for (loop = 1; loop< argc; loop++) {			|
+                if (strcmp(argv[loop], "--print")==0){		|
+                        printFlag = true;			|
+                }else {						|
+                        strcpy(filename, argv[loop]);		|
+                }						|	
+        }							|
+								|
+         if (argc <2) {						|
+                f= stdin;					|
+        }else {							|
+                f= fopen(argv[1], "r");				|
+        }							|
+								|
+								|
+        if (f== NULL){						|
+                return 1;					|
+        }							|
+								|
+        fscanf(f, "%d\n", &i);					|
+								|
+        liczby = malloc(i * sizeof(i));				|
+								|
+								|
+        for ( loop = 0; loop< i; loop++)  {			|
+                int a ;						|
+								|
+                fscanf(f, "%d\n",&a);				|
+                liczby[loop] = a;				|
+        }							|
+								|
+        if (f != NULL) {					|
+                fclose(f);					|
+        }							|
+/* fragment z tworzeniem pliku binarnego*/			|
+        f2 = fopen("binarny", "arwb");				|
+								|
+								|
+        for (loop = i; loop>0; loop--){				|
+                int a = liczby[loop-1];				|
+                printf("%d\n", a);				|
+                fwrite(&a, sizeof(a),1, f2);			|
+        }							|
+								|
+								|
+        if (f != NULL){						|
+                fclose(f2);					|
+        }							|
+/* fragment z wypisaniem zawartości pliku binarnego*/		|
+        if(printFlag){						|
+								|
+                f2 = fopen("binarny", "rb");			|
+								|
+                liczby2 = malloc(i * sizeof(i));		|
+								|
+                fread(liczby2, sizeof(liczby2), i, f2);		|
+								|
+                for (j=0;j<i;j++){				|
+                        printf(" %d\n", liczby2[j]);		|
+                }						|
+								|
+                if (f != NULL){					|
+                        fclose(f2);				|
+                }						|
+        }							|
+								|
+/* wyczyszczenie zalokowanej pamięci*/				|
+								|
+        if (liczby != NULL) {					|
+                free(liczby);					|
+        }							|
+								|
+        return 0;						|
+}								|
+_______________________________________________________________	|
+
+Zad 6.
+
+
