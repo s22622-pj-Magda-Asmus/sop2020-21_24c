@@ -274,4 +274,72 @@ _______________________________________________________________	|
 
 Zad 6.
 
+Napisz program z 3 funkcjami, każda funkcja niech będzie miała taką sygnaturkę:
+
+int (*f)(int,int) 
+Niech będą to funkcje: maksimum, minimum oraz suma.
+1. Zapamiętaj wskaźniki do tych funkcji w tablicy trójelementowej
+2. Niech program pobiera kolejno wartości:
+	-liczba "z" od 0 do 2 oznaczająca indeks funkcji w tablicy
+	-liczba elementów ciągu do pobrania (nazwijmy ją "n")
+	-kolejno n liczb
+3. Niech program przetwarza wczytaną tablicę w taki sposób, że:
+	-Niech "v" przyjmie wartość pierwszego elementu
+	-w pętli po wszystkich elementach od drugiego (indeks 1 w tablicy)
+	wykona funkcję o numerze "z"przekazując jako argumenty "v" oraz element o aktualnym indeksie. Niech wynik zostanie zapisany do "v"
+	-wypisze wartość "v"
+Czyli piszemy program który pozwoli na wykonanie albo sumy, albo znalezienia maksimum, albo znalezienia minimum z 
+"n" liczb. Program nie będzie korzystał z instrukcji warunkowych (w pętli głównej) do wyboru jaka funkcja ma być wykonana.
+________________________________________________________
+#include <stdio.h>					|
+#include <stdlib.h>					|
+							|
+int suma(int a, int b) {				|moje 3 funkcje
+    return a + b;					|
+}							|
+							|
+int minimum(int a, int b) {				|
+    return a < b ? a : b;				|
+}							|
+							|
+int maksimum(int a, int b) {				|
+    return a > b ? a : b;				|
+}							|
+							|
+int forAll(int *tablica, int n, int (*f)(int, int)) {	|funkcja realizująca zadaną funkcje na podstawie "jej miejsca"  w tablicy
+    int i;						|z funkcjami 
+    int v = tablica[0];					|
+							|
+    for (i = 1; i < n; i++) {				|
+        v = f(v, tablica[i]);				|
+    }							|
+							|
+    return v;						|
+}							|
+							|
+int main(int argc, char *argv[]) {			|
+    int z = 0, n = 0, i = 0, wynik = 0;			|
+    int (*f[])(int, int) = {maksimum, minimum, suma};	|tablica ze wskaznikami do funkcji
+    int *tablica;					|tablica z wartościami do obliczeń
+    printf("podaj z:");					|z= indeks w tablicy z ze wskaznikami do funkcji
+    scanf("%d", &z);					|
+    if (z > 2) {					|
+        printf("zla liczba parametrow dla z\n");	|
+        return -1;					|
+    }							|
+							|
+printf("podaj n:");					|
+    scanf("%d", &n);					|
+    tablica = malloc(sizeof(int) * n);			|
+							|
+    for (i = 0; i < n; i++)				|wypełnianie tablicy z wartościami do obliczeń
+        scanf("%d", &tablica[i]);			|
+							|
+    wynik = forAll(tablica, n, f[z]);			|
+    printf("wynik=%d", wynik);				|
+							|
+    return 0;						|
+}							|
+________________________________________________________|
+
 
