@@ -1,0 +1,208 @@
+16.05.2021    PROCESY
+
+Procesy cechy charakterystyczne:
+- każdy proces ma swój PID (proces id)
+- każdy proces ma proces nadrzedny (parent)- no może oprócz procesu init :) 
+- kazdy proces może sprawdzic PPID (proces ID parenta)
+- Proces nadrzedny powinien poczekac na zakończenie swoich procesów poptomnych przed własnym zakończeniem
+
+Proces zombie- proces który z jakiegoś powodu straciła parenta. Takie procesy są wyłapywane przez Kernela i zabijane.
+
+Funkcja fork()
+Przy wywołaniu funkci fork() tworzona jest kopia procesu (jako child).
+Wartość zwracana przez funkcje dla dziecka =0
+dla parenta >0
+
+w przypadku gdzy nie udało się stworzyć dziecka 
+Wartość dla procesu głównego (który miał być parentem ale sie nie udało) <0
+
+Zad 1.
+Napisz program, który przedstawi swój numer PID, oraz PPID.
+________________________________________________________________
+#include <stdio.h>						|
+#include <unistd.h>						|
+								|
+int main(){							|
+       printf("PID: %d\tPPID: %d\n", getpid(), getppid() );	|
+        return 0;						|
+}								|
+________________________________________________________________|
+
+
+Zad 2.
+Niech program z poprzedniego zadania będzie dodatkowo, po wypisaniu, czekał na standardowym wejściu na dane od użytkownika.
+________________________________________________________________
+#include <stdio.h>						|
+#include <unistd.h>						|
+								|
+int main(){							|
+								|
+        int input;						|
+								|
+        printf("PID: %d\tPPID: %d\n", getpid(), getppid() );	|
+								|
+        scanf("%d", &input);					|
+								|
+								|
+       return 0;						|
+}    								|
+________________________________________________________________|
+
+Zad 3.
+Uruchom program z poprzedniego zadania - nic nie podawaj na wejściu (program powinien czekać w nieskończoność). Za pomocą komendy kill zamknij ten proces korzystając z PID wypisanego przez niego.
+
+Tutaj wystarczy komenda :
+
+"kill 3327" , gdzie 3327 to PID dla tego procesu
+
+
+Zad 4.
+Napisz program, który uruchomi podproces za pomocą komendy fork. Niech proces rodzica oczekuje na proces potomka. Oba procesy powinny wypisać swój PID oraz PPID.
+________________________________________________________________________________
+#include <stdio.h>								|
+#include <unistd.h>								|
+#include <sys/types.h>								|
+#include <sys/wait.h>								|
+										|
+int main(){									|
+										|
+        int input;								|
+										|
+        /*scanf("%d", &input);*/						|
+										|
+        pid_t pid = fork();							|
+										|
+        if (pid > 0) {								|
+                printf("PID Rodzic : %d\tPPID: %d\n", getpid(), getppid() );	|
+                waitpid(0, &input ,0);						|
+                printf("Rodzic przestał oczekiwac na dziecko\n");		|
+                /*rodzic*/							|
+        } else if (pid == 0){							|
+        									|
+                printf("PID Dziecko : %d\tPPID: %d\n", getpid(), getppid() );	|
+                /*dziecko*/							|
+        } else {								|
+                printf("Dziecka nie udało sie utworzyć\n" );			|
+                /*dziecka nie udało sie stworzyć */				|
+        }									|
+										|
+										|
+        return 0;								|
+} 										|
+_______________________________________________________________________________	|
+
+Zad 5.
+Napisz program, który będzie obliczał w 2 procesach:
+Proces rodzica: Wartość sumy liczb od 0 do wartości zadanej jako pierwszy argument wykonania programu.
+Proces potomny: Wypisujący liczby nieparzyste od 1 do wartości zadanej jako pierwszy argument wykonania programu. Program powinien wypisać wyniki w kolejności takiej, że najpierw wypisze wynik proces potomny, a następnie proces rodzica. Nie korzystaj z komendy sleep.
+
+________________________________________________________________________________
+#include <stdio.h>								|
+#include <unistd.h>								|
+#include <sys/types.h>								|
+#include <sys/wait.h>								|
+#include <stdlib.h>								|
+int main(int argc, char** argv){						|
+										|
+        int input;								|
+         									|
+        int userInput = atoi(argv[1]);						|
+										|
+        pid_t pid = fork();							|
+										|
+        if (pid > 0) {								|
+                int suma=0;							|
+                int i=0;							|
+                for (i=0; i<userInput; i++){					|
+                        suma+=i;						|
+                }								|
+                waitpid(0, &input ,0);						|
+                printf("Suma z rodzica : %d\n", suma);				|
+                /*rodzic*/							|
+        } else if (pid == 0){							|
+                int i;								|
+                for (i= 1; i< userInput; i=i+2) {				|
+                        printf("Dziecko , liczba nieparzysta: %d\n", i );	|
+                }								|
+                        /*dziecko*/						|
+        }									|
+										|
+										|
+        return 0;								|
+}										|
+_______________________________________________________________________________	|
+
+Zad 6.
+Napisz program, który uruchomi 100 procesów w taki sposób, że każdy kolejny potomek stworzy potomka. Niech każdy proces poczeka na zakończenie procesu potomka. Możesz korzystać z oczekiwania na wejście lub z komendy sleep i zobacz czy drzewko procesów jest takie jak się spodziewasz (możesz w tym celu ograniczyć liczbę procesów do 10). Zobacz podpowiedź na początku tej strony.
+________________________________________________________________________________________________________
+#include <stdio.h>											|
+#include <unistd.h>											|
+#include <sys/types.h>											|
+#include <sys/wait.h>											|
+#include <stdlib.h>											|
+int main(int argc, char** argv){									|
+													|
+        int i;												|
+													|
+        for (i=0; i<10; i++){										|
+													|
+                pid_t pid = fork();									|
+													|
+                if (pid > 0) {										|
+                											|
+                        wait(NULL);									|
+                        break;										|
+                        fork();										|
+               /*rodzic*/										|
+                } else {										|
+                        printf("Kolejka: %d\tPID: %d\tPPID: %d\n" , i+1, getpid(), getppid());		|
+                }											|
+                        										|
+        }												|
+													|
+        return 0;											|
+}													|
+________________________________________________________________________________________________________|
+
+Zad 7.
+Napisz program, który uruchomi 100 procesów potomnych w taki sposób, że będzie jeden rodzic i 100 potomków. Proces główny niech oczekuje na zakończenie wszystkich procesów potomnych.
+________________________________________________________________________________________
+#include <stdio.h>									|
+#include <unistd.h>									|
+#include <sys/types.h>									|
+#include <sys/wait.h>									|
+#include <stdlib.h>									|	
+int main(int argc, char** argv){							|
+											|
+        int i;										|
+											|
+        pid_t master = getpid();							|
+											|
+        printf("Master pid: %d\n", master);						|
+											|
+        fflush(stdout);									|
+        for (i=0; i<100; i++){								|
+											|
+                if (getpid()== master) {						|
+                        pid_t pid = fork();						|
+											|
+                        if (pid ==0) {							|
+                        printf("i = %d PID : %d\tPPID:%d\n", i , getpid(), getppid());	|
+											|
+                         }								|
+                }									|
+	}										|
+        if (master == getpid()) {							|
+                int s= 0;								|
+                waitpid(0, &s , 0);							|
+                printf("Rodzic zaczekał, koniec \n");					|
+                fflush(stdout);								|
+        }										|
+											|
+        return 0;									|
+}											|
+_______________________________________________________________________________________	|
+
+
+Zad 8.
+Napisz prosty program chat-u, który będzie korzystał z pliku w katalogu /tmp do przekazywania wiadomości. Zastanów się jak to zrobić. Zachęcam zapytać prowadzącego o podpowiedzi.
