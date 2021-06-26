@@ -1,0 +1,44 @@
+30.05.2021  Sygnały i  gniazda 
+
+SYGNAŁY
+Przykładem sygnału jest "Ctrl+c".(sigint nr2)
+Sygnał taki można obsłużyć.
+
+	#include <signal.h>
+	
+	sighandler_t signal(int signum, sighandler_t handler)
+
+	To co powyżej oznacza że na sygnał "int signum" ma uruchomic funkcje "sighandler_t handler".
+	Niezależnie od miejsca w programie zostanie wykonany skok do tej funkcji.
+
+	W miejscu sighandler_t handler mozna tez wpisać SIG_IGN
+	SIG_IGN - wyłacza domyślny sygnał, jest on ignorowany, np :
+		
+		 signal(sigint,SIG_IGN)	
+
+	funkcja obsługująca sygnał ma postać:
+
+		void signalHandler(int s) {
+		}	
+
+	Funkcja ta nie jest wywoływana jawnie, jest wywoływana przez system operacyjny
+
+Istnieje też bardziej rozbudowana forma signal()
+
+	W tym przypadku używa się rejestracji sygnału.
+	W takiej sytuacji wymagane jest ustawienie kilku parametrów.
+	
+ 	
+	sigaction()- podmnienia istniejący (domyslny sposob działania sygnału), np:
+		sigaction(SIGINT, &act, NULL)
+
+
+	
+
+GNIAZDA -służą do tworzenia łączności sieciowej
+
+Przydatne materiały:
+https://web.archive.org/web/20201107133926/https://www.cs.rpi.edu/~moorthy/Courses/os98/Pgms/socket.html
+http://users.pja.edu.pl/~jms/qnx/help/tcpip_4.25_en/prog_guide/sock_advanced_tut.html
+
+
