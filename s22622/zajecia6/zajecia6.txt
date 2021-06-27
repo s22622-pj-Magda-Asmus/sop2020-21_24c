@@ -42,3 +42,122 @@ https://web.archive.org/web/20201107133926/https://www.cs.rpi.edu/~moorthy/Cours
 http://users.pja.edu.pl/~jms/qnx/help/tcpip_4.25_en/prog_guide/sock_advanced_tut.html
 
 
+PRZYKLADOWY KOD SERWERA
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+void error(char *msg)
+{
+    perror(msg);
+    exit(1);
+}
+
+int main(int argc, char *argv[])
+{
+     int sockfd;				// by serwer zaczał nasłuchiwac dany port (Socket File Descriptor)
+     int newsockfd;				// deskryptor na ktorym bedzimy operowac juz w czasie połączenia z klientem
+     int portno;				// numer portu
+     int clilen;				// długość adresu klienta
+     char buffer[256]; 				// serwer bedzie zaczytywał znaki z gnaizda do tego bufora
+     struct sockaddr_in serv_addr, cli_addr; 	// struktury przechowujace dane serwera i klienta
+
+     int n;
+     if (argc < 2) {
+         fprintf(stderr,"ERROR, no port provided\n");
+         exit(1);
+     }
+     sockfd = socket(AF_INET, SOCK_STREAM, 0);  // tutaj tworzymy socket z pierwszej linijki
+  						// AF_INET- przekazujemy typ połączenia (np polaczenia UNIXowe(AF_UNIX), internetowe(AF_INET))
+						// SOCK_STREAM- typ połączenia (SOCK_STREAM -dla połaczen TCP,czyli takie co sa potwierdzane)(SOCK_DGRAM-dla połaczeń UDP-bez potwierdzenia)
+						// 0 -pozwalamy wybrać typ połączenia (na podstawie poprzedniego argumentu)
+     if (sockfd < 0) 				// funkcja powyzej zwraca ) gdy nie udało jej sie utworzyś socketu
+        error("ERROR opening socket");
+
+     bzero((char *) &serv_addr, sizeof(serv_addr)); //wyzerowanie pamieci serwera
+
+     portno = atoi(argv[1]);
+     serv_addr.sin_family = AF_INET;
+     serv_addr.sin_addr.s_addr = INADDR_ANY;	// numer IP na którym nasłuchujemy (z INADDR_ANY-automatycznie ustawi maszyne na której sie otwiera)
+     serv_addr.sin_port = htons(portno); 	// numer portu na którym bedzie nasłuchiwał serwer
+						// htons() konwertuje int do kolejności sieciowej bajtów
+     if (bind(sockfd, (struct sockaddr *) &serv_addr,
+              sizeof(serv_addr)) < 0)
+              error("ERROR on binding"); 	// tu mamy przypisanie portu do socketu i odrazu sprawdzenie czy dany port jest OK
+     listen(sockfd,5);				// rozpoczęcie słuchania, 5 to długość kolejki połaczen przychodzacych (5 to max)
+     clilen = sizeof(cli_addr);			// przeliczenie długości adresu klienta
+     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); // accept() zatrzyma nam działanie programu i bedzie czekał na klienta
+     if (newsockfd < 0)				// obsługa błednego połaczenia
+          error("ERROR on accept");
+     bzero(buffer,256);				// zerowanie bufora
+     n = read(newsockfd,buffer,255);		// ilość znaków odczytanych
+     if (n < 0) error("ERROR reading from socket");// obsługa ewentualnego błedu przy ustalaniu ilości znaków
+     printf("Here is the message: %s\n",buffer); // wypisanie co własciwie odczytaliśmy
+						// poniżej odpowiedz do klienta
+     n = write(newsockfd,"I got your message",18);// ile znaków udało sie przesłać
+     if (n < 0) error("ERROR writing to socket"); // jesli sie nie udało to obsługa błedu
+     return 0;
+}
+
+PRZYKŁADOWY KOD KLIENTA
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h> 
+
+void error(char *msg)
+{
+    perror(msg);
+    exit(0);
+}
+int main(int argc, char *argv[])
+{
+    int sockfd, portno, n;			//deklaracja zmiennych
+
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+
+    char buffer[256];
+    if (argc < 3) {				// sprawdzenie czy sa 3 argumenty
+       fprintf(stderr,"usage %s hostname port\n", argv[0]);
+       exit(0);
+    }
+    portno = atoi(argv[2]);			// numer portu
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);	//tworzymy socket sieciowy (jak w serwerze)
+    if (sockfd < 0) 
+        error("ERROR opening socket");		//obsługa ewentualnego błędu przy tworzeniu socketu
+
+    server = gethostbyname(argv[1]);		// argv[1]=adres serwera 
+    if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *) &serv_addr, sizeof(serv_addr)); // zerowanie bufora
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(portno);		//htons jak w serwerze
+    if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) 
+        error("ERROR connecting");		// connect wywoływana w celu nawiązania łączności z serwerem 
+
+    printf("Please enter the message: "); 	//wprowadzanie wiadomości od użytkownika, 
+    bzero(buffer,256);
+    fgets(buffer,255,stdin);			// odczytuje wiadomość z stdin
+    n = write(sockfd,buffer,strlen(buffer));	//zapisanie do gniazda
+    if (n < 0) 
+         error("ERROR writing to socket");
+    bzero(buffer,256);
+    n = read(sockfd,buffer,255);		//odczyt odpowiedzi z gniazda
+    if (n < 0) 
+         error("ERROR reading from socket");
+    printf("%s\n",buffer);			// wyswietlenie odpowiedzi
+    return 0;
+}
+
+
+
